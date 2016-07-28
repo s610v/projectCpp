@@ -2,8 +2,8 @@
 //  gauss.hpp
 //  pairproduce
 //
-//  Created by Vijay Shah on 7/25/16.
-//  Copyright © 2016 Vijay Shah. All rights reserved.
+//  Created by s610v on 7/25/16.
+//  Copyright © 2016 s610v. All rights reserved.
 //
 
 #ifndef gauss_hpp
