@@ -14,7 +14,7 @@ public:
     Search(float);
     int getIndex() {return index;}
     int getIsExact() {return isExact;}
-    double getW2In() {return w2In;}
+    float getW2In() {return w2In;}
     void binarySearch(float*, int);
 };
 #endif /* search_h */

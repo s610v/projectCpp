@@ -6,7 +6,7 @@ using namespace std;
 
 Search::Search(){
     index = isExact = 0;
-    w2In = 8439.; // user input w2 value
+    w2In = 5098.; // user input w2 value
 }
 
 Search::Search(float w2){ // allows the user to set their own w2 value for input
@@ -33,7 +33,9 @@ void Search::binarySearch(float* w2Values, int K){ // binary searches the table 
             index = b;
             break;
         }
+        
         int mid = int(float(b+a)/2.); // calculate the midpoint of the interval
+        
         if (w2In > w2Values[mid]) { // update the interval
             a = mid;
             index = b;
@@ -42,12 +44,11 @@ void Search::binarySearch(float* w2Values, int K){ // binary searches the table 
             b = mid;
             index = a;
         }
-        else{ // input was the midpoint's value
+        else { // input was the midpoint's value
             index = mid;
             isExact = 1;
             break;
         }
     }
-    cout << "Your w2 value was near the w2 value in the table with index " << index << endl;
-    cout << isExact << endl; // Shows the user if their w2 value was from the table or not, 1 means that it was
+    cout << "Your w2 value was near the w2 value in the table with index " << index << ". " << endl;
 }

@@ -10,14 +10,15 @@
 #define Interpolate_hpp
 
 #include <stdio.h>
-#include "nr.h"
-#include "nrutil.h"
 #include "IntFunction.h"
 #include "search.h"
 
 class Interpolate{
+    float w2I;
 public:
-    void interpolation(float*, float, Search, IntFunction);
+    Interpolate();
+    Interpolate(float);
+    void interpolation(float*, Search, IntFunction);
     void polint(float*, float*, int, float, float*, float*);
 };
 

@@ -10,71 +10,74 @@
 #include <random>
 #include <ctime>
 #include <fstream>
+#include <string>
+#include <cstdlib>
 #include "search.h"
 #include "IntFunction.h"
 #include "Interpolate.hpp"
 using namespace std;
 
 // Cutpoint method
-void CM(int index, float Z[], float F[], IntFunction t){ // Cutpoint method
-    int N = t.getN();
-    float eValues[N];
-    for (int i=0; i<N; i++) {
-        eValues[i] = t.getIntValues(index,0,i);
-    }
+void CM(float F[], IntFunction integ){ // Cutpoint method
+    int N = integ.getN();
     int m = N-2;
     int p[m+1];
     for (int j=0; j<m; j++) {
         for (int i=1; i<N; i++) {
             if(F[i]>(float(j)/m)) {
-                p[j] = eValues[i];
+                p[j] = integ.getEpsValues(i);
                 break;
             }
         }
     }
-    p[N-1] = 1.0;
+    p[m] = 1.0;
+    ofstream f;
+    f.open("histdata.txt"); // Stores values for histogram
     for (int i=0; i<N; i++) {
-        double U = (double) rand()/RAND_MAX;
+        float U = (float) rand()/RAND_MAX;
         int L = int(ceil(m*U));
         int a = int(p[L]);
         while (U > F[a]) {
             a++;
         }
-        Z[i] = eValues[a];
+        f << integ.getEpsValues(a) << endl; // store the results in a file
     }
+    f.close();
 }
 
 int main(int argc, const char * argv[]) {
-    srand(time(NULL));
-    ofstream f;
-    f.open("histdata.txt"); // Stores values for histogram
-    float w2I = 8439.; // user input w2 value
-    
-    IntFunction integ; // integration object
-    Search s(w2I); // searching object
+    float w1 = 1./500.; // energy of soft photons
+    float w2 = 1000.; // initial energy value of gamma ray
+    float w2I;
+    cout << "Enter a float number: ";
+    cin >> w2I; // users enter a float for input w2
+    IntFunction integ(w1, w2); // integration object
+    Search search(w2I); // searching object
+    srand(1);
     integ.integration(); // compute the table of integrated functions
-    float w2Values[integ.getK()]; // for keeping the stored w2 values handy
-    for (int i=0; i<integ.getN(); i++) {
+    //float* w2Values = new float[integ.getK()];
+    //float* w2Values = (float*) malloc(integ.getK();
+    float w2Values[integ.getK()]; // for storing the w2 values
+    for (int i=0; i<integ.getK(); i++) {
         w2Values[i] = integ.getW2Values(i);
     }
-    s.binarySearch(w2Values, integ.getK()); // search the table
+    search.binarySearch(w2Values, integ.getK()); // search the table
+    //delete[] w2Values;
+    //free(w2Values);
     float fArray[integ.getN()];
-    if(s.getIsExact() == 0){ // we must interpolate
-        Interpolate intpl; // interpolation object
-        intpl.interpolation(fArray, w2I, s, integ);
+    //float* fArray = new float[integ.getN()];
+    if(search.getIsExact() == 0){ // we must interpolate
+        Interpolate intpl(w2I); // interpolation object
+        intpl.interpolation(fArray, search, integ);
+        CM(fArray,integ); // go through the cutpoint method
     }
-    else if(s.getIsExact() == 1){ // we do not need interpolation
+    else if(search.getIsExact() == 1){ // we do not need interpolation
         for (int i=0; i<integ.getN(); i++) {
-            fArray[i] = integ.getIntValues(s.getIndex(), 1, i);
+            fArray[i] = integ.getIntValues(search.getIndex(), i);
         }
+        CM(fArray,integ); // go through the cutpoint method
     }
-    float Z[integ.getN()];
-    CM(s.getIndex(),Z,fArray,integ); // go through the cutpoint method
-    for (int i=0; i<integ.getN(); i++) {
-        f << Z[i] << endl; // store the results in a file
-    }
-    f.close();
-    
+    //delete[] fArray;
     ofstream g; // Parameters needed for graphics
     g.open("parameter.txt");
     g << w2I << endl;
@@ -82,6 +85,6 @@ int main(int argc, const char * argv[]) {
     g << integ.getN() << endl;
     g.close();
     
-    cout << "Success, Project has reached its conclusion\n";
+    cout << "Success, Project has reached its conclusion.\n";
     return 0;
 }
