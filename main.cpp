@@ -17,34 +17,8 @@
 #include "Interpolate.h"
 using namespace std;
 
-// Cutpoint method
-void CM(double F[], IntFunction integ, int index){
-    int N = integ.getN();
-    int m = N-2; // set the number of pointers
-    int* p = new int[m+1]; // stores the pointers
-    for (int j=0; j<m; j++) { // compute the pointers
-        for (int i=1; i<N; i++) {
-            if(F[i]>(double(j)/m)) {
-                p[j] = integ.getEpsValues(index,i);
-                break;
-            }
-        }
-    }
-    p[m] = 1.0; // last pointer is the upper bound of normalized epsilon, which is always 1.0
-    ofstream f;
-    f.open("histdata.txt"); // Stores values for histogram
-    for (int i=0; i<N; i++) {
-        double U = (double) rand()/RAND_MAX; // get random number
-        int L = int(ceil(m*U));
-        int a = int(p[L]);
-        while (U > F[a]) {
-            a++;
-        }
-        f << integ.getEpsValues(index,a) << endl; // store the results in a file
-    }
-    delete[] p;
-    f.close();
-}
+// Cutpoint method declaration
+void CM(double F[], IntFunction integ, int index);
 
 int main() {
     IntFunction integ(1./500., 1000.); // integration object, w1 and w2 are the arguments
@@ -96,4 +70,39 @@ int main() {
     
     cout << "Success, project has reached its conclusion.\n";
     return 0;
+}
+
+// cutpoint method implementation
+void CM(double F[], IntFunction integ, int index){
+    int N = integ.getN();
+    int m = N-2; // set the number of pointers
+    int* p = new int[m+1]; // stores the pointers
+    for (int j=0; j<m; j++) { // compute the pointers
+        for (int i=1; i<N; i++) {
+            if(F[i]>(double(j)/m)) {
+                p[j] = integ.getEpsValues(index,i);
+                break;
+            }
+        }
+    }
+    
+    p[m] = 1.0; // last pointer is the upper bound of normalized epsilon, which is always 1.0
+    ofstream f;
+    f.open("histdata.txt"); // Stores values for histogram
+    for (int i=0; i<N; i++) {
+        double U = (double) rand()/RAND_MAX; // get random number
+        int L = int(ceil(m*U));
+        //int a = int(p[L]);
+        while (U > F[L]) {
+            L++;
+        }
+        if(L == int(ceil(m*U))){
+            do{
+                L--;
+            }while(U < F[L]);
+        }
+        f << integ.getEpsValues(index,L) << endl; // store the results in a file
+    }
+    delete[] p;
+    f.close();
 }
