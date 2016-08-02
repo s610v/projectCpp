@@ -1,7 +1,7 @@
 #ifndef _NR_H_
     #define _NR_H_
     #ifndef _FCOMPLEX_DECLARE_T_
-        typedef struct FCOMPLEX {float r,i;} fcomplex;
+        typedef struct FCOMPLEX {double r,i;} fcomplex;
         #define _FCOMPLEX_DECLARE_T_
     #endif /* _FCOMPLEX_DECLARE_T_ */
     #ifndef _ARITHCODE_DECLARE_T_
@@ -16,9 +16,8 @@
     #endif /* _HUFFCODE_DECLARE_T_ */
     #include <stdio.h>
     #if defined(__STDC__) || defined(ANSI) || defined(NRANSI) /* ANSI */
-        void polint(float xa[], float ya[], int n, float x, float *y, float *dy);
-        float qgaus(float (*func)(float), float a, float b);
-
+        void polint(double xa[], double ya[], int n, double x, double *y, double *dy);
+        double qgaus(double (*func)(double), double a, double b);
     #else /* ANSI */
 /* traditional - K&R */
         void addint();

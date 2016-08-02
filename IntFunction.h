@@ -6,25 +6,25 @@
 #include <stdio.h>
 
 class IntFunction{
-    float w1; // fixed energy of soft photons
-    float w2; // variable energy of gamma rays
-    static const float r0; // Classical electron radius
+    double w1; // fixed energy of soft photons
+    double w2; // variable energy of gamma rays
     static const int N = 10000; // number of points for arrays
-    static const int K = 70; // number of w2 values used
-    float intValues[K][N];
-    float epsValues [N];
-    float w2Values [K];
+    static const int K = 76; // number of w2 values used
+    double** intValues; // stores integrated function values
+    double** epsValues; // stores normalized epsilon values
+    double* w2Values; // stores the w2 values from the table
 public:
     IntFunction(); // Default constructor
-    IntFunction(float, float); // set your own values
-    float I(float) const; // Spectrum function
+    IntFunction(double, double); // set your own values
+    double I(double) const; // Spectrum function
     void integration(); // calls the Gauss quadrature method, also sets up integration
-    float getIntValues(int i, int k) {return intValues[i][k];} // returns the array with epsilon, integrated function values
-    float getEpsValues(int i) {return epsValues[i];}
-    float getW2Values(int i) {return w2Values[i];} // returns the array of w2 values
-    int getK() {return K;} // returns the number of w2 values used
-    int getN() {return N;} // returns the number of epsilon values used
-    float getW1() {return w1;} // returns the fixed value of w1
-    float getW2() {return w2;}
+    double getIntValues(int, int); // returns a value from an array with integrated function values
+    double getEpsValues(int, int); // returns a value of epsilon from the stored array
+    double getW2Values(int); // returns a w2 value from the stored array
+    void delW2Values() {delete[] w2Values;} // deletes the array of w2 values when it is not needed anymore
+    int getK() const {return K;} // returns the number of w2 values used
+    int getN() const {return N;} // returns the number of epsilon values used
+    double getW1() {return w1;} // returns the fixed value of w1
+    double getW2() {return w2;} // returns w2
 };
 #endif /* IntFunction_h */

@@ -9,12 +9,12 @@ Search::Search(){
     w2In = 5098.; // user input w2 value
 }
 
-Search::Search(float w2){ // allows the user to set their own w2 value for input
-    index = isExact = 0; // Both are preset to zero always
+Search::Search(double w2){ // allows the user to set their own w2 value for input
+    index = isExact = 0; // Both are preset to zero
     w2In = w2;
 }
 
-void Search::binarySearch(float* w2Values, int K){ // binary searches the table to find the closest values to input
+void Search::binarySearch(double* w2Values, int K){ // searches the table to find closest values to input value
     int a = 0;
     int b = K - 1;
     while((b-a)>1) {
@@ -34,7 +34,7 @@ void Search::binarySearch(float* w2Values, int K){ // binary searches the table 
             break;
         }
         
-        int mid = int(float(b+a)/2.); // calculate the midpoint of the interval
+        int mid = int(double(b+a)/2.); // calculate the midpoint of the interval
         
         if (w2In > w2Values[mid]) { // update the interval
             a = mid;
@@ -50,5 +50,5 @@ void Search::binarySearch(float* w2Values, int K){ // binary searches the table 
             break;
         }
     }
-    cout << "Your w2 value was near the w2 value in the table with index " << index << ". " << endl;
+    cout << "Table search complete. " << endl;
 }

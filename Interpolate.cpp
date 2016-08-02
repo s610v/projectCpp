@@ -7,7 +7,8 @@
 //
 #include <iostream>
 #include <cmath>
-#include "Interpolate.hpp"
+#include <cstdlib>
+#include "Interpolate.h"
 #include "nr.h"
 #include "nrutil.h"
 #include "search.h"
@@ -17,33 +18,23 @@ using namespace std;
 #define NR_END 1
 #define FREE_ARG char*
 
-float *Vector(long nl, long nh) // from Numerical Recipes
-/* allocate a float vector with subscript range v[nl..nh] */ {
-    float *v;
-    v=(float *)malloc((size_t) ((nh-nl+1+NR_END)*sizeof(float)));
+double *Vector(long nl, long nh) // from Numerical Recipes
+/* allocate a double vector with subscript range v[nl..nh] */ {
+    double *v=new double[(size_t)(nh-nl+1+NR_END)*sizeof(double)];
     return v-nl+NR_END;
 }
 
-void free_vector(float *v, long nl, long nh) // from Numerical Recipes
-/* free a float vector allocated with vector() */
+void free_vector(double *v, long nl, long nh) // from Numerical Recipes
+/* free a double vector allocated with vector() */
 {
-    free((FREE_ARG) (v+nl-NR_END));
+    //free((FREE_ARG) (v+nl-NR_END));
+    delete[] ((FREE_ARG)(v+nl-NR_END));
 }
 
-Interpolate::Interpolate(){
-    w2I = 5098.;
-    cout << "interpolate object created" << endl;
-}
-
-Interpolate::Interpolate(float w2){
-    w2I = w2;
-    cout << "interpolate object created" << endl;
-}
-
-void Interpolate::polint(float xa[], float ya[], int n, float x, float *y, float *dy){ // From Numerical Recipes, interpolates.
+void Interpolate::polint(double xa[], double ya[], int n, double x, double *y, double *dy){ // From Numerical Recipes, interpolates given values in an array and returns the value of the polynomial at point x, with an error estimate.
     int i,m,ns=1;
-    float den,dif,dift,ho,hp,w;
-    float *c,*d;
+    double den,dif,dift,ho,hp,w;
+    double *c,*d;
     
     dif = fabs(x-xa[1]);
     c = Vector(1,n);
@@ -77,15 +68,15 @@ void Interpolate::polint(float xa[], float ya[], int n, float x, float *y, float
     free_vector(c,1,n);
 }
 
-void Interpolate::interpolation(float* fArray, Search s, IntFunction integ){ // If needed, this function gathers the necessary values from the table and interpolates
-    cout << "testing" << endl;
-    int isExact = s.getIsExact();
-    if (isExact == 0){ // check to see if interpolation is needed
+void Interpolate::interpolation(double* fArray, double w2, Search s, IntFunction integ){ // the "main" method for interpolation
+    if (s.getIsExact() == 0){ // check to see if interpolation is needed
         int index = s.getIndex();
-        int N = integ.getN();
-        int K = integ.getK();
-        float w2Val1, w2Val2, w2Val3, w2Val4;
-        float iVal1[N], iVal2[N], iVal3[N], iVal4[N];
+        static const int N = integ.getN();
+        static const int K = integ.getK();
+        double w2Val1, w2Val2, w2Val3, w2Val4;
+        double *iVal1 = new double[N], *iVal2 = new double[N], *iVal3=new double[N], *iVal4=new double[N];
+        
+        // Retrieve the necessary values
         if(index > K-4){ // special case 1
             w2Val1 = integ.getW2Values(K-4); // Isolate the correct w2 and gamma values
             w2Val2 = integ.getW2Values(K-3);
@@ -122,14 +113,21 @@ void Interpolate::interpolation(float* fArray, Search s, IntFunction integ){ // 
                 iVal4 [i] = integ.getIntValues(index+2,i);
             }
         }
-        cout << "test" << endl;
+        
         // Interpolation
+        double *wVal = new double[4], *iVal = new double[4];
         for (int i=0; i<N; i++) { // loop over all epsilon
-            float fw2, dfw2;
-            float wVal [4] = {w2Val1, w2Val2, w2Val3, w2Val4}, iVal [4] = {iVal1[i], iVal2[i], iVal3[i], iVal4[i]};
-            polint(wVal-1, iVal-1, 4, w2I, &fw2, &dfw2); // Call the polynomial interpolation class
+            double fw2, dfw2;
+            wVal[0] = w2Val1, wVal[1] = w2Val2, wVal[2] = w2Val3, wVal[3] = w2Val4;
+            iVal[0] = iVal1[i], iVal[1] = iVal2[i], iVal[2] = iVal3[i], iVal[3] = iVal4[i];
+            polint(wVal-1, iVal-1, 4, w2, &fw2, &dfw2); // Call the polynomial interpolation class
             fArray[i] = fw2; // store interpolated values
         }
+        delete[] wVal;
+        delete[] iVal;
+        delete[] iVal1;
+        delete[] iVal2;
+        delete[] iVal3;
+        delete[] iVal4;
     }
 }
-

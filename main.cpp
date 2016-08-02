@@ -14,70 +14,79 @@
 #include <cstdlib>
 #include "search.h"
 #include "IntFunction.h"
-#include "Interpolate.hpp"
+#include "Interpolate.h"
 using namespace std;
 
 // Cutpoint method
-void CM(float F[], IntFunction integ){ // Cutpoint method
+void CM(double F[], IntFunction integ, int index){
     int N = integ.getN();
-    int m = N-2;
-    int p[m+1];
-    for (int j=0; j<m; j++) {
+    int m = N-2; // set the number of pointers
+    int* p = new int[m+1]; // stores the pointers
+    for (int j=0; j<m; j++) { // compute the pointers
         for (int i=1; i<N; i++) {
-            if(F[i]>(float(j)/m)) {
-                p[j] = integ.getEpsValues(i);
+            if(F[i]>(double(j)/m)) {
+                p[j] = integ.getEpsValues(index,i);
                 break;
             }
         }
     }
-    p[m] = 1.0;
+    p[m] = 1.0; // last pointer is the upper bound of normalized epsilon, which is always 1.0
     ofstream f;
     f.open("histdata.txt"); // Stores values for histogram
     for (int i=0; i<N; i++) {
-        float U = (float) rand()/RAND_MAX;
+        double U = (double) rand()/RAND_MAX; // get random number
         int L = int(ceil(m*U));
         int a = int(p[L]);
         while (U > F[a]) {
             a++;
         }
-        f << integ.getEpsValues(a) << endl; // store the results in a file
+        f << integ.getEpsValues(index,a) << endl; // store the results in a file
     }
+    delete[] p;
     f.close();
 }
 
-int main(int argc, const char * argv[]) {
-    float w1 = 1./500.; // energy of soft photons
-    float w2 = 1000.; // initial energy value of gamma ray
-    float w2I;
-    cout << "Enter a float number: ";
-    cin >> w2I; // users enter a float for input w2
-    IntFunction integ(w1, w2); // integration object
+int main() {
+    IntFunction integ(1./500., 1000.); // integration object, w1 and w2 are the arguments
+    double w2I; // input w2 Value
+    cout << "Enter a number ";
+    cin >> w2I;
+    if(w2I < integ.getW2()){ // catch some possible out of bounds early
+        cout << "w2 input value is below the minimum of " << integ.getW2() << " (or is of invalid type), ending program. Try again." << endl;
+        return 0;
+    }
     Search search(w2I); // searching object
-    srand(1);
     integ.integration(); // compute the table of integrated functions
-    //float* w2Values = new float[integ.getK()];
-    //float* w2Values = (float*) malloc(integ.getK();
-    float w2Values[integ.getK()]; // for storing the w2 values
+    cout << "Integration Complete" << endl;
+    
+    double* w2Values = new double[integ.getK()];
     for (int i=0; i<integ.getK(); i++) {
-        w2Values[i] = integ.getW2Values(i);
+        w2Values[i] = integ.getW2Values(i); // store w2 values locally
     }
     search.binarySearch(w2Values, integ.getK()); // search the table
-    //delete[] w2Values;
-    //free(w2Values);
-    float fArray[integ.getN()];
-    //float* fArray = new float[integ.getN()];
+    delete[] w2Values;
+    
+    if(search.getIsExact() == -1){
+        cout << "Program has ended due to out of bounds value." << endl;
+        return 0;
+    }
+    
+    double* fArray = new double[integ.getN()];
     if(search.getIsExact() == 0){ // we must interpolate
-        Interpolate intpl(w2I); // interpolation object
-        intpl.interpolation(fArray, search, integ);
-        CM(fArray,integ); // go through the cutpoint method
+        Interpolate intpl;
+        intpl.interpolation(fArray, w2I, search, integ); // calls interpolation function
+        integ.delW2Values(); // deletes the array of w2Values to free up stack space
     }
     else if(search.getIsExact() == 1){ // we do not need interpolation
+        integ.delW2Values();
         for (int i=0; i<integ.getN(); i++) {
-            fArray[i] = integ.getIntValues(search.getIndex(), i);
+            fArray[i] = integ.getIntValues(search.getIndex(), i); // take the values from the table
         }
-        CM(fArray,integ); // go through the cutpoint method
     }
-    //delete[] fArray;
+    
+    srand(time(NULL)); // set the seed of the random number
+    CM(fArray,integ, search.getIndex()); // go through the cutpoint method
+    delete[] fArray;
     ofstream g; // Parameters needed for graphics
     g.open("parameter.txt");
     g << w2I << endl;
@@ -85,6 +94,6 @@ int main(int argc, const char * argv[]) {
     g << integ.getN() << endl;
     g.close();
     
-    cout << "Success, Project has reached its conclusion.\n";
+    cout << "Success, project has reached its conclusion.\n";
     return 0;
 }
